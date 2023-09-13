@@ -33,7 +33,39 @@ return user
 }
     }
 
-    signin(){
+    async signin(dto: AuthDto){
+
+        const user = await this.prisma.user.findUnique({
+            where:{
+                email: dto.email
+            }
+        })
+
+        if (!user){
+            throw new ForbiddenException(
+                'Credentials Incorrect'
+            )
+        }
+       
+
+        //compare password
+
+        const pwMatches = await argon.verify(
+            user.hash,
+            dto.password
+        )
+
+        if(!pwMatches){
+            throw new ForbiddenException(
+                'Credentials Incorrect'
+            )
+        }
+        //if password does not matrch, exception
+
+        delete user.hash;
+        return user
+
+        //send back user.
         return {msg : `I Have signed In!`}
 
     }
